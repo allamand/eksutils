@@ -1,6 +1,21 @@
 ARG FROM_IMAGE=amazonlinux
 ARG FROM_TAG=2.0.20200207.1
-FROM ${FROM_IMAGE}:${FROM_TAG}
+
+# create a small image for runtime.
+FROM golang:1.11 as builder
+
+RUN mkdir -p /go/src/github.com/eksutils
+WORKDIR /go/src/github.com/eksutils
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
+
+################## BUILD OK ################################
+
+
+#FROM ${FROM_IMAGE}:${FROM_TAG}
+FROM amazonlinux:2.0.20200207.1
+
+COPY --from=builder /go/src/github.com/eksutils/main /main
 
 ################ UTILITIES VERSIONS ########################
 ARG USER_NAME="eksutils"
@@ -181,7 +196,7 @@ RUN curl -sLo get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scr
  && ./get_helm.sh
 
 # setup eksctl (latest at time of docker build)
-RUN curl --silent --location "https://github.com/weaveworks/eksctl/releases/download/latest_release/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp \
+RUN curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp \
     && mv -v /tmp/eksctl /usr/local/bin
 
 # setup the eksuser tool 
@@ -313,5 +328,6 @@ COPY .p10k.zsh /home/$USER_NAME/.p10k.zsh
 RUN /utilsversions.sh
 
 USER $USER_NAME
-CMD ["zsh"]
+EXPOSE 8080
+CMD ["/main"]
 
