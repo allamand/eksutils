@@ -196,7 +196,7 @@ RUN curl -sLo get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scr
  && ./get_helm.sh
 
 # setup eksctl (latest at time of docker build)
-RUN curl --silent --location "https://github.com/weaveworks/eksctl/releases/download/latest_release/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp \
+RUN curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp \
     && mv -v /tmp/eksctl /usr/local/bin
 
 # setup the eksuser tool 
