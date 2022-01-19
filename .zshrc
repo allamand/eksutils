@@ -30,7 +30,6 @@ alias k=kubectl
 plugins=(
     git
     docker
-    osx
     virtualenv
     kubectl
     wd
