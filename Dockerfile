@@ -19,8 +19,8 @@ COPY --from=builder /go/src/github.com/eksutils/main /main
 
 ################ UTILITIES VERSIONS ########################
 ARG USER_NAME="eksutils"
-ARG KUBE_RELEASE_VER=v1.17.3
-ARG NODE_VERSION=12.16.2
+ARG KUBE_RELEASE_VER=v1.21.5
+ARG NODE_VERSION=17.3.1
 ARG IAM_AUTH_VER=0.4.0
 ARG EKSUSER_VER=0.2.1
 ARG KUBECFG_VER=0.16.0
@@ -37,9 +37,9 @@ ARG KUBECTX_VER=0.9.0
 ARG KUBENS_VER=0.9.0
 ARG BAT_VER=0.15.4
 ARG VSCODESERVER_VER=3.9.2
-ARG AWS_CDK_VERSION=1.115.0
+ARG AWS_CDK_VERSION=2.9.0
 
-ARG FLUXCTL_VERSION=1.22.1
+ARG FLUXCTL_VERSION=1.22.2
 
 ################## SETUP ENV ###############################
 ENV USER_NAME $USER_NAME
@@ -103,6 +103,7 @@ RUN yum update -y \
             procps-ng \
             figlet \
             iproute \
+            libcap-ng-utils \
  && curl --silent --location https://dl.yarnpkg.com/rpm/yarn.repo | sudo tee /etc/yum.repos.d/yarn.repo \
     && yum install -y yarn \
  && yum clean all \
