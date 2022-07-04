@@ -123,6 +123,14 @@ docker run -it --rm -p 8080:8080 -v $HOME/.aws:/root/.aws -v $HOME/.kube:/root/.
 ```
 Note I map the `.aws` directory and the `.kube` directory here too. In this case mapping the `.aws` direcory is useful if you intend to save your IAM credentials with `aws configure`. If you don't and you prefer to only enter them ephimerally every time `eksutils` is launched then omit that mapping. It's more work but definitely more secured. I don't usually map other directories but it's definitely an option. Note also that MacOS doesn't support `--network host` so I start it by mapping the port 8080 (in case I want to start `kubectl proxy`, Octant, VS Code server or any other service). 
 
+##### Codespace
+
+I sometimes also used it on GitHub Codespace
+
+```
+docker run -it --rm --network host -v $HOME/.aws:/root/.aws -v $HOME/.kube:/root/.kube -v $PWD:/environment -w /environment allamand/eksutils:latest zsh
+```
+
 ##### Linux
 
 For the most part this would be similar to the Cloud9 scenario. The exception may be that you may want to avoid using the `--network host` flag and instead exporting a specific port (e.g. 8080). 
