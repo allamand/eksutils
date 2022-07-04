@@ -10,7 +10,7 @@ push:
 
 
 run:
-	docker run -it --rm -v $(HOME)/.aws:/root/.aws -v $(HOME)/.kube:/root/.kube allamand/eksutils:latest
+	docker run -it --rm -v $(HOME)/.aws:/root/.aws -v $(HOME)/.kube:/root/.kube allamand/eksutils
 #	docker run -it --rm --network host -v $(HOME)/.aws:/root/.aws -v $(HOME)/.kube:/root/.kube allamand/eksutils:latest`
 
 run-root:

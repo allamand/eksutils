@@ -1,26 +1,30 @@
 ARG FROM_IMAGE=amazonlinux
-ARG FROM_TAG=2022
+#ARG FROM_TAG=2022.0.20220531.0
+ARG FROM_TAG=2
 
 # create a small image for runtime.
-FROM golang:1.19 as builder
+FROM golang:1.18-buster as builder
 
 RUN mkdir -p /go/src/github.com/eksutils
 WORKDIR /go/src/github.com/eksutils
-COPY . .
+COPY . /go/src/github.com/eksutils
+RUN pwd && ls -la && go mod init
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 
 ################## BUILD OK ################################
 
 
 #FROM ${FROM_IMAGE}:${FROM_TAG}
-FROM amazonlinux:2022
+#FROM amazonlinux:2022.0.20220531.0
+FROM amazonlinux:2
 
 COPY --from=builder /go/src/github.com/eksutils/main /main
 
 ################ UTILITIES VERSIONS ########################
 ARG USER_NAME="eksutils"
 ARG KUBE_RELEASE_VER=v1.22.11
-ARG NODE_VERSION=18.4.0
+ARG NVM_VERSION=0.39.1
+ARG NODE_VERSION=14
 #ARG IAM_AUTH_VER=0.4.0
 ARG EKSUSER_VER=0.2.1
 #ARG KUBECFG_VER=0.16.0
@@ -72,7 +76,7 @@ WORKDIR /tmp
 # docker is being installed to support DinD scenarios (e.g. for being able to build)
 # httpd-tools include the ab tool (for benchmarking http end points)
 RUN yum update -y \
- && yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm \
+ #&& yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm \
  && yum install -y \
             git \
             sudo \
@@ -81,7 +85,6 @@ RUN yum update -y \
             jq \
             less \
             openssl \
-            openssl11 \
             python3 \
             tar \
             unzip \
@@ -102,8 +105,16 @@ RUN yum update -y \
             figlet \
             iproute \
             libcap-ng-utils \
- && curl --silent --location https://dl.yarnpkg.com/rpm/yarn.repo | sudo tee /etc/yum.repos.d/yarn.repo \
-    && yum install -y yarn \
+ && mkdir -p ${NVM_DIR} \
+ #&& curl -s https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash \
+ && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v$NVM_VERSION/install.sh | bash \
+ && . $NVM_DIR/nvm.sh \
+ && nvm install $NODE_VERSION \
+ && nvm alias default $NODE_VERSION \
+ && nvm use default \
+ && node --version \           
+ #&& curl --silent --location https://dl.yarnpkg.com/rpm/yarn.repo | sudo tee /etc/yum.repos.d/yarn.repo \
+ #   && yum install -y yarn \
  && yum clean all \
  && rm -rf /var/cache/yum
 
@@ -125,20 +136,28 @@ RUN yum update -y \
 ## begin setup runtime pre-requisites ##
 ########################################
 
-# Node
-RUN mkdir -p ${NVM_DIR} \
- && curl -s https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash \
- && . $NVM_DIR/nvm.sh \
- && nvm install $NODE_VERSION \
- && nvm alias default $NODE_VERSION \
- && nvm use default
+RUN . $NVM_DIR/nvm.sh \
+ #&& amazon-linux-extras install epel -y \
+ #&& yum install -y libuv 
+ && npm install -g npm \
+ && npm install -g ts-node \ 
+ && npm install -g typescript \
+ && npm install yarn -g \
+# setup the aws cdk cli (latest at time of docker build)
+ && npm i -g aws-cdk \
+# setup the aws cdk (latest at time of docker build)
+ && npm i -g aws-cdk-lib \
+# setup the cdk8s cli (latest at time of docker build)
+ && npm i -g cdk8s-cli
 
-# setup Typescript (latest at time of docker build)
-RUN npm install -g typescript
+RUN echo OK
 
 # setup pip (latest at time of docker build)
 RUN curl -s https://bootstrap.pypa.io/get-pip.py -o get-pip.py \
-   && PYTHON=python3 python3 get-pip.py
+ && PYTHON=python3 python3 get-pip.py \
+ && pip install --upgrade aws-cdk-lib \
+    awscli \
+    awslogs 
 
 ########################################
 ### end setup runtime pre-requisites ###
@@ -160,18 +179,7 @@ RUN curl -Ls "https://${AWSCLI_URL_BASE}/${AWSCLI_URL_FILE}" -o "awscliv2.zip" \
  # setup the eb cli (latest at time of docker build)
 RUN pip install awsebcli --upgrade 
 
-# setup the aws cdk cli (latest at time of docker build)
-RUN npm i -g aws-cdk
-# setup the aws cdk (latest at time of docker build)
-RUN npm i -g aws-cdk@$AWS_CDK_VERSION \
-    && pip install --upgrade \
-    awscli \
-    awslogs
 
-
-
-# setup the cdk8s cli (latest at time of docker build)
-RUN npm i -g cdk8s-cli
 
 # setup kubectl (latest at time of docker build)
 RUN curl -sLO https://storage.googleapis.com/kubernetes-release/release/${KUBE_RELEASE_VER}/bin/linux/amd64/kubectl \
