@@ -42,7 +42,7 @@ ARG FLUXCTL_VERSION=1.25.2
 ################## SETUP ENV ###############################
 ENV USER_NAME $USER_NAME
 ENV USER_PASSWORD $USER_PASSWORD
-ENV CONTAINER_IMAGE_VER=v1.1.0
+ENV CONTAINER_IMAGE_VER=v1.1.1
 ### OCTANT
 # browser autostart at octant launch is disabled
 # ip address and port are modified (to better work with Cloud9)
