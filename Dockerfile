@@ -1,8 +1,8 @@
 ARG FROM_IMAGE=amazonlinux
-ARG FROM_TAG=2.0.20200207.1
+ARG FROM_TAG=2022
 
 # create a small image for runtime.
-FROM golang:1.11 as builder
+FROM golang:1.19 as builder
 
 RUN mkdir -p /go/src/github.com/eksutils
 WORKDIR /go/src/github.com/eksutils
@@ -13,38 +13,36 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 
 
 #FROM ${FROM_IMAGE}:${FROM_TAG}
-FROM amazonlinux:2.0.20200207.1
+FROM amazonlinux:2022
 
 COPY --from=builder /go/src/github.com/eksutils/main /main
 
 ################ UTILITIES VERSIONS ########################
 ARG USER_NAME="eksutils"
-ARG KUBE_RELEASE_VER=v1.21.5
-ARG NODE_VERSION=17.3.1
-ARG IAM_AUTH_VER=0.4.0
+ARG KUBE_RELEASE_VER=v1.22.11
+ARG NODE_VERSION=18.4.0
+#ARG IAM_AUTH_VER=0.4.0
 ARG EKSUSER_VER=0.2.1
-ARG KUBECFG_VER=0.16.0
+#ARG KUBECFG_VER=0.16.0
 ARG KSONNET_VER=0.13.1
-ARG K9S_VER=0.19.2
-ARG DOCKER_COMPOSE_VER=1.25.4
-ARG KIND_VER=0.8.1
-ARG OCTANT_VER=0.10.2
+ARG K9S_VER=0.25.21
+ARG DOCKER_COMPOSE_VER=2.6.1
+ARG KIND_VER=0.14.0
+ARG OCTANT_VER=0.25.1
 ARG AWSCLI_URL_BASE=awscli.amazonaws.com
 ARG AWSCLI_URL_FILE=awscli-exe-linux-x86_64.zip
-#https://github.com/aca/go-kubectx/releases
-ARG GOKUBECTX_VER=0.1.0
-ARG KUBECTX_VER=0.9.0
-ARG KUBENS_VER=0.9.0
-ARG BAT_VER=0.15.4
-ARG VSCODESERVER_VER=3.9.2
-ARG AWS_CDK_VERSION=2.9.0
+ARG KUBECTX_VER=0.9.4
+ARG KUBENS_VER=0.9.4
+ARG BAT_VER=0.21.0
+ARG VSCODESERVER_VER=4.5.0
+ARG AWS_CDK_VERSION=2.30.0
 
-ARG FLUXCTL_VERSION=1.22.2
+ARG FLUXCTL_VERSION=1.25.2
 
 ################## SETUP ENV ###############################
 ENV USER_NAME $USER_NAME
 ENV USER_PASSWORD $USER_PASSWORD
-ENV CONTAINER_IMAGE_VER=v1.0.0
+ENV CONTAINER_IMAGE_VER=v1.1.0
 ### OCTANT
 # browser autostart at octant launch is disabled
 # ip address and port are modified (to better work with Cloud9)
@@ -166,13 +164,7 @@ RUN pip install awsebcli --upgrade
 RUN npm i -g aws-cdk
 # setup the aws cdk (latest at time of docker build)
 RUN npm i -g aws-cdk@$AWS_CDK_VERSION \
-    && pip install --upgrade aws-cdk.core==$AWS_CDK_VERSION \
-    aws-cdk.aws_ecs_patterns==$AWS_CDK_VERSION \
-    aws-cdk.aws_ec2==$AWS_CDK_VERSION \
-    aws-cdk.aws_ecs==$AWS_CDK_VERSION \
-    aws-cdk.aws_servicediscovery==$AWS_CDK_VERSION \
-    aws_cdk.aws_iam==$AWS_CDK_VERSION \
-    aws_cdk.aws_efs==$AWS_CDK_VERSION \
+    && pip install --upgrade \
     awscli \
     awslogs
 
@@ -187,9 +179,9 @@ RUN curl -sLO https://storage.googleapis.com/kubernetes-release/release/${KUBE_R
     && mv ./kubectl /usr/local/bin/kubectl
 
 # setup the IAM authenticator for aws (for Amazon EKS)
-RUN curl -sLo aws-iam-authenticator https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v${IAM_AUTH_VER}/aws-iam-authenticator_${IAM_AUTH_VER}_linux_amd64 \
-    && chmod +x ./aws-iam-authenticator \
-    && mv ./aws-iam-authenticator /usr/local/bin
+# RUN curl -sLo aws-iam-authenticator https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v${IAM_AUTH_VER}/aws-iam-authenticator_${IAM_AUTH_VER}_linux_amd64 \
+    # && chmod +x ./aws-iam-authenticator \
+    # && mv ./aws-iam-authenticator /usr/local/bin
 
 # setup Helm (latest at time of docker build)
 RUN curl -sLo get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 \
@@ -207,9 +199,9 @@ RUN curl -sLo eksuser-linux-amd64.zip https://github.com/prabhatsharma/eksuser/r
     && mv ./binaries/linux/eksuser /usr/local/bin/eksuser
 
 # setup kubecfg
-RUN curl -sLo kubecfg https://github.com/ksonnet/kubecfg/releases/download/v${KUBECFG_VER}/kubecfg-linux-amd64 \
-    && chmod +x kubecfg \
-    && mv kubecfg /usr/local/bin/kubecfg
+# RUN curl -sLo kubecfg https://github.com/ksonnet/kubecfg/releases/download/v${KUBECFG_VER}/kubecfg-linux-amd64 \
+    # && chmod +x kubecfg \
+    # && mv kubecfg /usr/local/bin/kubecfg
 
 # setup kubectx
 RUN curl -sLo kubectx.tar.gz https://github.com/ahmetb/kubectx/releases/download/v${KUBECTX_VER}/kubectx_v${KUBECTX_VER}_linux_x86_64.tar.gz \
@@ -272,14 +264,6 @@ ENV ZSH_THEME agnoster
 # install oh-my-zsh
 RUN wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh -O - | zsh || true
 
-# install Kubens / Kubectx
-RUN curl -sSLO https://github.com/aca/go-kubectx/releases/download/v${GOKUBECTX_VER}/go-kubectx_${GOKUBECTX_VER}_Linux_x86_64.tar.gz \
-    && tar zxvf go-kubectx_${GOKUBECTX_VER}_Linux_x86_64.tar.gz \
-    && mv kubectx kubens /usr/local/bin/ \
-    && rm README.md go-kubectx_${GOKUBECTX_VER}_Linux_x86_64.tar.gz
-
-
-#
 RUN curl -Lo ec2-instance-selector https://github.com/aws/amazon-ec2-instance-selector/releases/download/v2.0.1/ec2-instance-selector-`uname | tr '[:upper:]' '[:lower:]'`-amd64 && chmod +x ec2-instance-selector \
   && mv ec2-instance-selector /usr/local/bin
 
