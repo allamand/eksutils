@@ -45,9 +45,9 @@ errorcheck yum
 logger "green" "checking git..."
 git version
 errorcheck git 
-logger "green" "checking yarn..."
-yarn --version
-errorcheck yarn 
+#logger "green" "checking yarn..."
+#yarn --version
+#errorcheck yarn 
 logger "green" "checking sudo..."
 sudo -V # | head -n 1
 errorcheck sudo
@@ -84,9 +84,9 @@ errorcheck wget
 logger "green" "checking which..."
 which --version # | head -n 1
 errorcheck which
-logger "green" "checking figlet..."
-figlet -v # | head -n 1
-errorcheck figlet
+#logger "green" "checking figlet..."
+#figlet -v # | head -n 1
+#errorcheck figlet
 
 # add-ons tools (pre-requisites for the actual utilities) 
 logger "green" "checking pip..."
