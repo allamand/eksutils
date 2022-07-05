@@ -105,6 +105,7 @@ RUN yum update -y \
             figlet \
             iproute \
             libcap-ng-utils \
+            the_silver_searcher \
  && mkdir -p ${NVM_DIR} \
  #&& curl -s https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash \
  && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v$NVM_VERSION/install.sh | bash \
