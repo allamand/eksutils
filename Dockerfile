@@ -319,7 +319,7 @@ COPY .p10k.zsh /home/$USER_NAME/.p10k.zsh
 ########### Tools and Utilities versions checks ############
 ############################################################
 
-RUN /utilsversions.sh
+#RUN /utilsversions.sh
 
 USER $USER_NAME
 EXPOSE 8080
