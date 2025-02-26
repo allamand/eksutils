@@ -8,6 +8,8 @@ build:
 push:
 	docker push allamand/eksutils
 
+test:
+	docker run -ti allamand/eksutils zsh
 
 run:
 	docker run -it --rm -v $(HOME)/.aws:/root/.aws -v $(HOME)/.kube:/root/.kube allamand/eksutils
