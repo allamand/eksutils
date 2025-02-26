@@ -12,7 +12,7 @@ on:
 
 env:
   STACK_NAME: ${{ github.event.repository.name }}
-  AWS_DEFAULT_REGION: eu-west-1
+  AWS_REGION: us-east-1  # Changed to match configure-aws-credentials
   ECR_REGISTRY: public.ecr.aws/seb-demo
 
 jobs:
@@ -32,8 +32,25 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: us-east-1
+          aws-region: ${{ env.AWS_REGION }}
+          mask-aws-account-id: true
           
+      - name: Verify AWS credentials
+        run: |
+          echo "Verifying AWS credentials..."
+          aws sts get-caller-identity
+          
+          echo "Verifying ECR access..."
+          aws ecr-public get-login-password --region us-east-1 > /dev/null
+          
+          echo "Checking ECR repository..."
+          aws ecr-public describe-repositories \
+            --repository-names ${{ github.event.repository.name }} \
+            --region us-east-1 || \
+          # aws ecr-public create-repository \
+          #   --repository-name ${{ github.event.repository.name }} \
+          #   --region us-east-1
+            
       - name: Login to Public ECR
         uses: aws-actions/amazon-ecr-login@v2
         with:
