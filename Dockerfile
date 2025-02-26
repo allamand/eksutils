@@ -22,24 +22,26 @@ COPY --from=builder /go/src/github.com/eksutils/main /main
 
 ################ UTILITIES VERSIONS ########################
 ARG USER_NAME="eksutils"
-ARG KUBE_RELEASE_VER=v1.22.11
-ARG NVM_VERSION=0.39.1
-ARG NODE_VERSION=14
-#ARG IAM_AUTH_VER=0.4.0
+ARG KUBE_RELEASE_VER=v1.32.0
+ARG NVM_VERSION=0.40.1
+ARG NODE_VERSION=20.18.0
+ARG IAM_AUTH_VER=0.6.30
 ARG EKSUSER_VER=0.2.1
-#ARG KUBECFG_VER=0.16.0
-ARG KSONNET_VER=0.13.1
-ARG K9S_VER=0.25.21
-ARG DOCKER_COMPOSE_VER=2.6.1
-ARG KIND_VER=0.14.0
-ARG OCTANT_VER=0.25.1
+ARG KUBECFG_VER=0.22.0 # deprecated
+ARG KSONNET_VER=0.13.1 # deprecated
+ARG K9S_VER=0.40.3
+ARG DOCKER_COMPOSE_VER=2.33.1
+ARG KIND_VER=0.27.0
+ARG OCTANT_VER=0.25.1 # deprecated
 ARG AWSCLI_URL_BASE=awscli.amazonaws.com
 ARG AWSCLI_URL_FILE=awscli-exe-linux-x86_64.zip
-ARG KUBECTX_VER=0.9.4
-ARG KUBENS_VER=0.9.4
-ARG BAT_VER=0.21.0
-ARG VSCODESERVER_VER=4.5.0
-ARG AWS_CDK_VERSION=2.30.0
+#https://github.com/aca/go-kubectx/releases
+ARG GOKUBECTX_VER=0.1.0
+ARG KUBECTX_VER=0.9.5
+ARG KUBENS_VER=0.9.5
+ARG BAT_VER=0.25.0
+ARG VSCODESERVER_VER=4.97.2
+ARG AWS_CDK_VERSION=2.1001.0
 
 ARG FLUXCTL_VERSION=1.25.2
 
@@ -273,7 +275,15 @@ ENV ZSH_THEME agnoster
 # install oh-my-zsh
 RUN wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh -O - | zsh || true
 
-RUN curl -Lo ec2-instance-selector https://github.com/aws/amazon-ec2-instance-selector/releases/download/v2.0.1/ec2-instance-selector-`uname | tr '[:upper:]' '[:lower:]'`-amd64 && chmod +x ec2-instance-selector \
+# install Kubens / Kubectx
+RUN curl -sSLO https://github.com/aca/go-kubectx/releases/download/v${GOKUBECTX_VER}/go-kubectx_${GOKUBECTX_VER}_Linux_x86_64.tar.gz \
+    && tar zxvf go-kubectx_${GOKUBECTX_VER}_Linux_x86_64.tar.gz \
+    && mv kubectx kubens /usr/local/bin/ \
+    && rm README.md go-kubectx_${GOKUBECTX_VER}_Linux_x86_64.tar.gz
+
+
+#
+RUN curl -Lo ec2-instance-selector https://github.com/aws/amazon-ec2-instance-selector/releases/download/v3.1.1/ec2-instance-selector-`uname | tr '[:upper:]' '[:lower:]'`-amd64 && chmod +x ec2-instance-selector \
   && mv ec2-instance-selector /usr/local/bin
 
 #RUN cd ~/.oh-my-zsh/custom/themes && git clone https://github.com/bhilburn/powerlevel9k.git
