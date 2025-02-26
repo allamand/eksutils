@@ -1,6 +1,6 @@
 ARG FROM_IMAGE=amazonlinux
 #ARG FROM_TAG=2022.0.20220531.0
-ARG FROM_TAG=2
+ARG FROM_TAG=2023
 
 # create a small image for runtime.
 FROM golang:1.18-buster as builder
@@ -16,14 +16,14 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 
 #FROM ${FROM_IMAGE}:${FROM_TAG}
 #FROM amazonlinux:2022.0.20220531.0
-FROM amazonlinux:2
+FROM amazonlinux:2023
 
 COPY --from=builder /go/src/github.com/eksutils/main /main
 
 ################ UTILITIES VERSIONS ########################
 ARG USER_NAME="eksutils"
 ARG KUBE_RELEASE_VER=v1.32.0
-ARG NVM_VERSION=0.40.1
+ARG NVM_VERSION=0.40.0
 ARG NODE_VERSION=20.18.0
 ARG IAM_AUTH_VER=0.6.30
 ARG EKSUSER_VER=0.2.1
@@ -77,9 +77,10 @@ WORKDIR /tmp
 # setup various utils (latest at time of docker build)
 # docker is being installed to support DinD scenarios (e.g. for being able to build)
 # httpd-tools include the ab tool (for benchmarking http end points)
-RUN yum update -y \
- #&& yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm \
- && yum install -y \
+RUN dnf update -y && \
+ dnf install -y curl --allowerasing && \
+ dnf groupinstall -y "Development Tools" && \
+ dnf install -y curl \
             git \
             sudo \
             httpd-tools \
@@ -94,20 +95,16 @@ RUN yum update -y \
             wget \
             which \
             wget \
-            fonts-powerline \
             emacs-nox \
             telnet \
             net-tools \
             nc \
             iftop \
-            tshark \
             tmux \
             bind-utils \
             procps-ng \
-            figlet \
             iproute \
             libcap-ng-utils \
-            the_silver_searcher \
  && mkdir -p ${NVM_DIR} \
  #&& curl -s https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash \
  && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v$NVM_VERSION/install.sh | bash \
@@ -119,7 +116,7 @@ RUN yum update -y \
  #&& curl --silent --location https://dl.yarnpkg.com/rpm/yarn.repo | sudo tee /etc/yum.repos.d/yarn.repo \
  #   && yum install -y yarn \
  && yum clean all \
- && rm -rf /var/cache/yum
+ && rm -rf /var/cache/dnf
 
 
 ##### Make python3 default
@@ -140,8 +137,6 @@ RUN yum update -y \
 ########################################
 
 RUN . $NVM_DIR/nvm.sh \
- #&& amazon-linux-extras install epel -y \
- #&& yum install -y libuv 
  && npm install -g npm \
  && npm install -g ts-node \ 
  && npm install -g typescript \
@@ -231,11 +226,11 @@ RUN curl -sLo - https://github.com/ksonnet/ksonnet/releases/download/v${KSONNET_
    && mv ks /usr/bin/ks
 
 # setup k9s
-RUN curl -sLo - https://github.com/derailed/k9s/releases/download/v${K9S_VER}/k9s_Linux_x86_64.tar.gz |tar xfz - \
+RUN curl -sLo - https://github.com/derailed/k9s/releases/download/v${K9S_VER}/k9s_Linux_amd64.tar.gz |tar xfz - \
     && mv k9s /usr/local/bin/k9s
 
 # setup docker
-RUN PYTHON=python2 amazon-linux-extras install docker -y
+#RUN PYTHON=python2 amazon-linux-extras install docker -y
 
 # setup docker-compose
 RUN curl -sL "https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VER}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose \
