@@ -169,10 +169,17 @@ RUN curl -s https://bootstrap.pypa.io/get-pip.py -o get-pip.py \
 RUN sh -c "$(wget -O- https://raw.githubusercontent.com/deluan/zsh-in-docker/master/zsh-in-docker.sh)"
 
 # setup the aws cli v2 (latest at time of docker build)
-RUN curl -Ls "https://${AWSCLI_URL_BASE}/${AWSCLI_URL_FILE}" -o "awscliv2.zip" \
- && unzip awscliv2.zip \
- && ./aws/install \
- && /usr/local/bin/aws --version
+ARG TARGETARCH
+RUN case ${TARGETARCH} in \
+    amd64) AWSCLI_ARCH="x86_64" ;; \
+    arm64) AWSCLI_ARCH="aarch64" ;; \
+    *) echo "Unsupported architecture: ${TARGETARCH}" && exit 1 ;; \
+    esac && \
+    curl -Ls "https://awscli.amazonaws.com/awscli-exe-linux-${AWSCLI_ARCH}.zip" -o awscliv2.zip && \
+    unzip awscliv2.zip && \
+    ./aws/install && \
+    rm -rf aws awscliv2.zip
+
 
  # setup the eb cli (latest at time of docker build)
 RUN pip install awsebcli --upgrade 
